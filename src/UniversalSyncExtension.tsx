@@ -29,6 +29,8 @@ import {
 import { SyncEngine, SyncEngineState } from './engine/SyncEngine';
 import { UniversalSyncSettingsTab } from './ui/UniversalSyncSettingsTab';
 import { createProvider } from './providers';
+import { CloudSyncIcon } from './ui/Icons';
+
 
 export class UniversalSyncExtension extends Extension {
   private config: UniversalSyncConfig = DEFAULT_CONFIG;
@@ -110,7 +112,7 @@ export class UniversalSyncExtension extends Extension {
     // 4. Register Action Rail Icon (Left Toolbar)
     this.addActionRailIcon(
       'action-sync',
-      React.createElement('span', { className: 'text-sm select-none' }, '☁️'),
+      React.createElement(CloudSyncIcon, { size: 16 }),
       'Universal Sync: Sync Notes',
       async (app) => {
         const res = await this.engine.syncNow();
@@ -137,24 +139,24 @@ export class UniversalSyncExtension extends Extension {
         const isSyncing = telemetry.lastStatus === 'syncing';
         const isError = telemetry.lastStatus === 'error';
 
-        let icon = '☁️';
+        let dotColor = 'bg-emerald-400';
         let text = 'Synced';
-        let colorClass = 'text-neutral-400 hover:text-white';
+        let textColor = 'text-[#888] hover:text-[#dcddde]';
 
         if (isSyncing) {
-          icon = '🔄';
+          dotColor = 'bg-amber-400';
           text = 'Syncing...';
-          colorClass = 'text-amber-400';
+          textColor = 'text-amber-400';
         } else if (isError) {
-          icon = '⚠️';
+          dotColor = 'bg-rose-500';
           text = 'Sync Error';
-          colorClass = 'text-rose-400';
+          textColor = 'text-rose-400';
         }
 
         return React.createElement(
           'div',
           {
-            className: `flex items-center gap-1.5 text-xs font-medium cursor-pointer select-none ${colorClass}`,
+            className: `flex items-center gap-1.5 text-xs font-normal cursor-pointer select-none ${textColor}`,
             title: `Provider: ${this.config.activeProvider} • Click to sync now`,
             onClick: () => {
               this.engine.syncNow().then((r) => {
@@ -162,11 +164,12 @@ export class UniversalSyncExtension extends Extension {
               });
             },
           },
-          React.createElement('span', null, icon),
+          React.createElement('span', { className: `w-1.5 h-1.5 rounded-full ${dotColor} shrink-0` }),
           React.createElement('span', null, text)
         );
       },
     });
+
 
     // 6. Register Settings Tab with Interactive Wizard
     this.registerSettingTab({

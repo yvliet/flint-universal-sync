@@ -120,7 +120,7 @@ CREATE POLICY "Allow Flint Sync CRUD" ON flint_sync_documents
   - `Keep Both (Create Conflict Copy)`: Preserves both versions by creating a `[Conflict Copy] Note Title` document.
   - `Local Always Wins`: Preserves local changes and ignores remote conflicts.
   - `Remote Always Wins`: Overwrites local modifications with incoming remote changes.
-- **Status Bar Integration**: Clickable indicator in the bottom right corner shows current status (`☁️ Synced`, `🔄 Syncing...`, `⚠️ Sync Error`) and last sync timestamp.
+- **Status Bar Integration**: Clickable indicator in the bottom right corner shows live synchronization state ("Synced", "Syncing...", "Sync Error") and last sync timestamp.
 - **Command Palette (`Ctrl+K`)**:
   - `Universal Sync: Synchronize Notes Now` (Hotkey: `Ctrl+Shift+S`)
   - `Universal Sync: Test Database Connection`

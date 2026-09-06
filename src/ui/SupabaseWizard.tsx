@@ -1,12 +1,22 @@
-/**
+﻿/**
  * @module SupabaseWizard
  * @description
- * Interactive onboarding wizard guiding users through setting up a free-tier
- * Supabase PostgreSQL database for cross-device note synchronization in under 2 minutes.
+ * Clean, professional onboarding wizard guiding users through setting up a free-tier
+ * Supabase PostgreSQL database for cross-device note synchronization.
  */
 
 import React, { useState } from 'react';
+import { Button, TextInput } from 'flint';
 import { SupabaseProvider } from '../providers/SupabaseProvider';
+import {
+  CopyIcon,
+  CheckIcon,
+  ExternalLinkIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  DatabaseIcon,
+  RefreshIcon,
+} from './Icons';
 
 interface SupabaseWizardProps {
   projectUrl: string;
@@ -34,30 +44,26 @@ export const SupabaseWizard: React.FC<SupabaseWizardProps> = ({
       await navigator.clipboard.writeText(sqlScript);
       setCopiedSql(true);
       setTimeout(() => setCopiedSql(false), 2000);
-    } catch {
-      // Clipboard write fallback
-    }
+    } catch {}
   };
 
   return (
-    <div className="border border-[var(--color-primary,#6366f1)]/30 bg-[var(--bg-secondary,#18181b)] rounded-lg p-4 space-y-4">
+    <div className="bg-[#1e1e1e] border border-[#2e2e2e] rounded-xl overflow-hidden divide-y divide-[#282828]">
       {/* Header Banner */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-md bg-[#3ecf8e]/10 border border-[#3ecf8e]/30 flex items-center justify-center text-[#3ecf8e] text-base font-bold select-none">
-            ⚡
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-[#252525] border border-[#333] flex items-center justify-center text-[#34d399] shrink-0">
+            <DatabaseIcon size={16} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="text-sm font-semibold text-[var(--text-primary,#ffffff)]">
-                Recommended: Supabase Free Tier Setup
-              </h4>
-              <span className="px-1.5 py-0.5 text-[10px] font-medium bg-[#3ecf8e]/20 text-[#3ecf8e] border border-[#3ecf8e]/30 rounded">
-                100% Free Forever
+              <span className="text-[13px] font-medium text-white">Supabase Free Tier Setup</span>
+              <span className="px-2 py-0.5 text-[10px] font-semibold bg-[#162a20] text-[#34d399] border border-[#065f46]/60 rounded-[4px]">
+                Free Forever
               </span>
             </div>
-            <p className="text-xs text-[var(--text-secondary,#a1a1aa)] mt-0.5">
-              500 MB PostgreSQL cloud storage with zero subscriptions or credit card requirements.
+            <p className="text-[11px] text-[#777] mt-0.5">
+              500 MB cloud database with zero subscriptions, payment cards, or usage fees.
             </p>
           </div>
         </div>
@@ -65,64 +71,62 @@ export const SupabaseWizard: React.FC<SupabaseWizardProps> = ({
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-xs text-[var(--text-secondary,#a1a1aa)] hover:text-[var(--text-primary,#ffffff)] px-2.5 py-1 rounded bg-[var(--bg-tertiary,#27272a)] border border-[var(--border-default,#3f3f46)]"
+          className="flint-btn text-xs py-1 px-2.5 flex items-center gap-1.5 cursor-pointer"
         >
-          {isExpanded ? 'Hide Steps' : 'Show Setup Steps'}
+          <span>{isExpanded ? 'Hide Steps' : 'Show Setup Steps'}</span>
+          {isExpanded ? <ChevronUpIcon size={12} /> : <ChevronDownIcon size={12} />}
         </button>
       </div>
 
       {isExpanded && (
-        <div className="space-y-4 pt-2 border-t border-[var(--border-default,#3f3f46)]/50">
+        <div className="p-4 space-y-4 bg-[#1b1b1b]">
           {/* Step 1 */}
           <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-[var(--bg-tertiary,#27272a)] text-[var(--text-primary,#ffffff)] text-xs flex items-center justify-center font-semibold border border-[var(--border-default,#3f3f46)] shrink-0 mt-0.5">
+            <div className="w-5 h-5 rounded-full bg-[#282828] text-[#aaa] text-[11px] flex items-center justify-center font-semibold border border-[#383838] shrink-0 mt-0.5">
               1
             </div>
-            <div className="space-y-1">
-              <p className="text-xs text-[var(--text-primary,#ffffff)] font-medium">
-                Create a free project on Supabase
+            <div className="space-y-1 flex-1">
+              <p className="text-xs text-[#dcddde] font-medium">Create a free project on Supabase</p>
+              <p className="text-[11px] text-[#777] leading-relaxed">
+                Sign in to <span className="font-mono text-[#dcddde]">supabase.com</span> and click{' '}
+                <strong className="text-white">New Project</strong>. Choose your nearest geographic region and set any secure database password.
               </p>
-              <p className="text-[11px] text-[var(--text-secondary,#a1a1aa)] leading-relaxed">
-                Sign in to <span className="font-mono text-emerald-400">supabase.com</span> and click{' '}
-                <strong>New Project</strong>. Choose your nearest region and set any secure database password.
-              </p>
-              <a
-                href="https://supabase.com/dashboard"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-[#3ecf8e] hover:underline font-medium pt-1"
-              >
-                Open Supabase Dashboard →
-              </a>
+              <div className="pt-0.5">
+                <a
+                  href="https://supabase.com/dashboard"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-[var(--flint-accent,#ea580c)] hover:underline font-medium"
+                >
+                  <span>Open Supabase Dashboard</span>
+                  <ExternalLinkIcon size={11} />
+                </a>
+              </div>
             </div>
           </div>
 
           {/* Step 2 */}
           <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-[var(--bg-tertiary,#27272a)] text-[var(--text-primary,#ffffff)] text-xs flex items-center justify-center font-semibold border border-[var(--border-default,#3f3f46)] shrink-0 mt-0.5">
+            <div className="w-5 h-5 rounded-full bg-[#282828] text-[#aaa] text-[11px] flex items-center justify-center font-semibold border border-[#383838] shrink-0 mt-0.5">
               2
             </div>
             <div className="space-y-2 flex-1">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-[var(--text-primary,#ffffff)] font-medium">
-                  Run this 1-click table schema in Supabase SQL Editor
+                <p className="text-xs text-[#dcddde] font-medium">
+                  Initialize Sync Schema in SQL Editor
                 </p>
-                <button
-                  type="button"
+                <Button
+                  size="sm"
                   onClick={handleCopySql}
-                  className={`text-xs px-2.5 py-1 rounded font-medium border flex items-center gap-1.5 ${
-                    copiedSql
-                      ? 'bg-emerald-600 text-white border-emerald-500'
-                      : 'bg-[#3ecf8e]/10 text-[#3ecf8e] border-[#3ecf8e]/40 hover:bg-[#3ecf8e]/20'
-                  }`}
+                  icon={copiedSql ? <CheckIcon size={12} /> : <CopyIcon size={12} />}
                 >
-                  {copiedSql ? '✓ Copied to Clipboard!' : '📋 Copy SQL Script'}
-                </button>
+                  {copiedSql ? 'Copied to Clipboard' : 'Copy SQL Script'}
+                </Button>
               </div>
-              <p className="text-[11px] text-[var(--text-secondary,#a1a1aa)]">
-                In Supabase, open <strong>SQL Editor</strong> on the left, click <strong>New query</strong>, paste the copied SQL, and click <strong>Run</strong>.
+              <p className="text-[11px] text-[#777]">
+                In Supabase, open <strong className="text-white">SQL Editor</strong> on the left, click <strong className="text-white">New query</strong>, paste the copied SQL, and click <strong className="text-white">Run</strong>.
               </p>
-              <pre className="text-[10px] font-mono bg-black/40 p-2.5 rounded border border-[var(--border-default,#3f3f46)] text-neutral-300 max-h-28 overflow-y-auto select-all">
+              <pre className="text-[10px] font-mono bg-[#141414] p-3 rounded-[6px] border border-[#2a2a2a] text-[#888] max-h-24 overflow-y-auto select-all">
                 {sqlScript}
               </pre>
             </div>
@@ -130,53 +134,57 @@ export const SupabaseWizard: React.FC<SupabaseWizardProps> = ({
 
           {/* Step 3 */}
           <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-[var(--bg-tertiary,#27272a)] text-[var(--text-primary,#ffffff)] text-xs flex items-center justify-center font-semibold border border-[var(--border-default,#3f3f46)] shrink-0 mt-0.5">
+            <div className="w-5 h-5 rounded-full bg-[#282828] text-[#aaa] text-[11px] flex items-center justify-center font-semibold border border-[#383838] shrink-0 mt-0.5">
               3
             </div>
             <div className="space-y-3 flex-1">
-              <p className="text-xs text-[var(--text-primary,#ffffff)] font-medium">
-                Paste Project URL and Anon Key
-              </p>
-              <p className="text-[11px] text-[var(--text-secondary,#a1a1aa)]">
-                In your Supabase project, go to <strong>Project Settings → API</strong>. Copy your <strong>Project URL</strong> and <strong>anon public API key</strong> below:
-              </p>
+              <div>
+                <p className="text-xs text-[#dcddde] font-medium">Paste Project Credentials</p>
+                <p className="text-[11px] text-[#777] mt-0.5">
+                  In your Supabase project, go to <strong className="text-white">Project Settings → API</strong>. Copy your <strong className="text-white">Project URL</strong> and <strong className="text-white">anon public key</strong>:
+                </p>
+              </div>
 
-              <div className="space-y-2 bg-[var(--bg-tertiary,#27272a)]/50 p-3 rounded border border-[var(--border-default,#3f3f46)]">
+              <div className="space-y-2.5 bg-[#171717] p-3.5 rounded-lg border border-[#262626]">
                 <div>
-                  <label className="block text-[11px] font-medium text-[var(--text-primary,#ffffff)] mb-1">
+                  <label className="block text-[11px] font-normal text-[#888] mb-1">
                     Project URL
                   </label>
-                  <input
-                    type="text"
-                    placeholder="https://abcdefghijklm.supabase.co"
+                  <TextInput
+                    isMono
                     value={projectUrl}
-                    onChange={(e) => onUpdateCredentials(e.target.value, anonKey)}
-                    className="w-full bg-[var(--bg-primary,#121214)] border border-[var(--border-default,#3f3f46)] rounded px-2.5 py-1.5 text-xs text-[var(--text-primary,#ffffff)] focus:outline-none focus:border-[#3ecf8e]"
+                    onChange={(e) => onUpdateCredentials(e.target.value.trim(), anonKey)}
+                    placeholder="https://xxxxxxxxxxxxxxxxxxxx.supabase.co"
+                    className="w-full"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-medium text-[var(--text-primary,#ffffff)] mb-1">
-                    Anon / Public API Key
+                  <label className="block text-[11px] font-normal text-[#888] mb-1">
+                    Anon Public API Key
                   </label>
-                  <input
+                  <TextInput
+                    isMono
                     type="password"
-                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                     value={anonKey}
-                    onChange={(e) => onUpdateCredentials(projectUrl, e.target.value)}
-                    className="w-full bg-[var(--bg-primary,#121214)] border border-[var(--border-default,#3f3f46)] rounded px-2.5 py-1.5 text-xs text-[var(--text-primary,#ffffff)] focus:outline-none focus:border-[#3ecf8e]"
+                    onChange={(e) => onUpdateCredentials(projectUrl, e.target.value.trim())}
+                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    className="w-full"
                   />
                 </div>
 
-                <div className="pt-2 flex justify-end">
-                  <button
-                    type="button"
+                <div className="pt-1 flex items-center justify-between">
+                  <span className="text-[10px] text-[#666]">
+                    Stored locally on this device. Never uploaded to third parties.
+                  </span>
+                  <Button
+                    size="sm"
                     onClick={onTestConnection}
                     disabled={isTesting || !projectUrl || !anonKey}
-                    className="px-3 py-1.5 bg-[#3ecf8e] hover:bg-[#3ecf8e]/90 text-black text-xs font-semibold rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    icon={<RefreshIcon size={12} className={isTesting ? 'animate-spin' : ''} />}
                   >
-                    {isTesting ? 'Testing Connection...' : '⚡ Test Connection'}
-                  </button>
+                    {isTesting ? 'Testing Connection...' : 'Verify Connection'}
+                  </Button>
                 </div>
               </div>
             </div>

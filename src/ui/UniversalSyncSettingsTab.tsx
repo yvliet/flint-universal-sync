@@ -1,13 +1,20 @@
-/**
+﻿/**
  * @module UniversalSyncSettingsTab
  * @description
- * Settings and management interface for the Universal External Sync extension.
- * Provides interactive provider configuration, telemetry status cards,
- * and the 1-click guided setup wizard.
+ * Clean, professional settings interface for Universal External Sync.
+ * Implements Obsidian-grade design patterns using Flint native UI components.
  */
 
 import React, { useState } from 'react';
 import type { FlintApp } from 'flint';
+import {
+  SettingCard,
+  SettingItem,
+  Button,
+  TextInput,
+  Toggle,
+  Select,
+} from 'flint';
 import {
   UniversalSyncConfig,
   SyncTelemetry,
@@ -19,6 +26,13 @@ import { SupabaseWizard } from './SupabaseWizard';
 import { TursoProvider } from '../providers/TursoProvider';
 import { CloudflareD1Provider } from '../providers/CloudflareD1Provider';
 import { CustomRestProvider } from '../providers/CustomRestProvider';
+import {
+  RefreshIcon,
+  CheckIcon,
+  AlertTriangleIcon,
+  CopyIcon,
+  DatabaseIcon,
+} from './Icons';
 
 interface UniversalSyncSettingsTabProps {
   app: FlintApp;
@@ -73,7 +87,7 @@ export const UniversalSyncSettingsTab: React.FC<UniversalSyncSettingsTabProps> =
 
       setTestResult(result);
       if (result.success) {
-        app.workspace.showToast('Database connection verified successfully!', 'success');
+        app.workspace.showToast('Database connection verified successfully', 'success');
       } else {
         app.workspace.showToast(result.message || 'Connection test failed', 'warning');
       }
@@ -115,387 +129,423 @@ export const UniversalSyncSettingsTab: React.FC<UniversalSyncSettingsTabProps> =
     if (diff < 30) return 'Just now';
     if (diff < 60) return `${diff}s ago`;
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    return new Date(ts).toLocaleString();
+    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const isSyncing = telemetry.lastStatus === 'syncing' || isManualSyncing;
+  const isError = telemetry.lastStatus === 'error';
+  const isSuccess = telemetry.lastStatus === 'success';
+
   return (
-    <div className="space-y-6 max-w-3xl pb-10 text-[var(--text-primary,#ffffff)] font-sans">
+    <div className="flex flex-col gap-5 max-w-3xl pb-8 font-sans">
       {/* Overview Header */}
-      <div>
-        <h3 className="text-lg font-semibold tracking-tight">Universal External Sync</h3>
-        <p className="text-xs text-[var(--text-secondary,#a1a1aa)] mt-1 leading-relaxed">
-          Synchronize your Hearth notes across all devices using your own free cloud database.
-          Never pay a subscription for storage you can host yourself for free.
-        </p>
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <h3 className="text-sm font-semibold text-white mb-0.5">Universal External Sync</h3>
+          <p className="text-[11px] text-[#777]">
+            Synchronize your notes across devices using your personal cloud database with zero subscription fees.
+          </p>
+        </div>
       </div>
 
-      {/* Telemetry Status Card */}
-      <div className="bg-[var(--bg-secondary,#18181b)] border border-[var(--border-default,#3f3f46)] rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span
-              className={`w-2.5 h-2.5 rounded-full ${
-                telemetry.lastStatus === 'syncing' || isManualSyncing
-                  ? 'bg-amber-400 animate-pulse'
-                  : telemetry.lastStatus === 'success'
-                  ? 'bg-emerald-400'
-                  : telemetry.lastStatus === 'error'
-                  ? 'bg-rose-500'
-                  : 'bg-neutral-500'
-              }`}
-            />
-            <span className="text-sm font-semibold capitalize">
-              {telemetry.lastStatus === 'syncing' || isManualSyncing
-                ? 'Syncing changes...'
-                : telemetry.lastStatus === 'success'
-                ? 'All Notes Synchronized'
-                : telemetry.lastStatus === 'error'
-                ? 'Sync Error Occurred'
-                : 'Ready / Idle'}
+      {/* Group 1: Sync Status & Telemetry */}
+      <SettingCard
+        title="Sync Status & Telemetry"
+        description="Real-time connection state, delta synchronization, and execution metrics."
+      >
+        <SettingItem
+          name="Connection Status"
+          description={
+            <span className="flex items-center gap-3 mt-1 text-[11px] text-[#777]">
+              <span>
+                Last synced:{' '}
+                <strong className="text-[#dcddde] font-medium">
+                  {formatLastSync(telemetry.lastSyncedAt)}
+                </strong>
+              </span>
+              <span>•</span>
+              <span>
+                Total synced:{' '}
+                <strong className="text-[#dcddde] font-medium">{telemetry.syncedCount}</strong>
+              </span>
+              {telemetry.conflictCount > 0 && (
+                <>
+                  <span>•</span>
+                  <span className="text-amber-400">
+                    Conflicts resolved: {telemetry.conflictCount}
+                  </span>
+                </>
+              )}
             </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--text-secondary,#a1a1aa)]">
-            <span>Last Synced: <strong className="text-[var(--text-primary,#ffffff)]">{formatLastSync(telemetry.lastSyncedAt)}</strong></span>
-            <span>Total Syncs: <strong className="text-[var(--text-primary,#ffffff)]">{telemetry.syncedCount}</strong></span>
-            {telemetry.conflictCount > 0 && (
-              <span className="text-amber-400">Conflicts Resolved: {telemetry.conflictCount}</span>
-            )}
-          </div>
-
-          {telemetry.lastError && (
-            <p className="text-xs text-rose-400 bg-rose-950/40 px-2 py-1 rounded border border-rose-800/40">
-              {telemetry.lastError}
-            </p>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={handleTestConnection}
-            disabled={isTesting}
-            className="px-3 py-1.5 rounded text-xs font-medium bg-[var(--bg-tertiary,#27272a)] hover:bg-[var(--bg-tertiary,#27272a)]/80 text-[var(--text-primary,#ffffff)] border border-[var(--border-default,#3f3f46)] disabled:opacity-50"
-          >
-            {isTesting ? 'Testing...' : 'Test Connection'}
-          </button>
-          <button
-            type="button"
-            onClick={handleManualSync}
-            disabled={isManualSyncing || isTesting}
-            className="px-4 py-1.5 rounded text-xs font-semibold bg-[var(--color-primary,#6366f1)] hover:bg-[var(--color-primary,#6366f1)]/90 text-white disabled:opacity-50 flex items-center gap-1.5"
-          >
-            {isManualSyncing ? 'Syncing...' : '🔄 Sync Now'}
-          </button>
-        </div>
-      </div>
-
-      {/* Test Connection Alert Result */}
-      {testResult && (
-        <div
-          className={`p-3 rounded-lg text-xs border flex items-center justify-between ${
-            testResult.success
-              ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300'
-              : 'bg-rose-950/40 border-rose-800 text-rose-300'
-          }`}
+          }
         >
           <div className="flex items-center gap-2">
-            <span>{testResult.success ? '✓' : '✗'}</span>
-            <span>{testResult.message}</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[5px] bg-[#181818] border border-[#2a2a2a] text-xs">
+              <span
+                className={`w-2 h-2 rounded-full shrink-0 ${
+                  isSyncing
+                    ? 'bg-amber-400'
+                    : isSuccess
+                    ? 'bg-emerald-400'
+                    : isError
+                    ? 'bg-rose-500'
+                    : 'bg-neutral-500'
+                }`}
+              />
+              <span className="text-xs text-[#dcddde] font-medium">
+                {isSyncing
+                  ? 'Syncing...'
+                  : isSuccess
+                  ? 'Synchronized'
+                  : isError
+                  ? 'Sync Error'
+                  : 'Ready'}
+              </span>
+            </div>
+
+            <Button
+              size="sm"
+              onClick={handleTestConnection}
+              disabled={isTesting}
+            >
+              {isTesting ? 'Testing...' : 'Test Connection'}
+            </Button>
+
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleManualSync}
+              disabled={isSyncing || isTesting}
+              icon={<RefreshIcon size={12} className={isSyncing ? 'animate-spin' : ''} />}
+            >
+              {isSyncing ? 'Syncing...' : 'Sync Now'}
+            </Button>
           </div>
-          {testResult.latencyMs && (
-            <span className="text-[11px] opacity-75 font-mono">{testResult.latencyMs}ms</span>
+        </SettingItem>
+
+        {testResult && (
+          <div className="p-3.5 bg-[#171717] flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              {testResult.success ? (
+                <CheckIcon size={14} className="text-emerald-400 shrink-0" />
+              ) : (
+                <AlertTriangleIcon size={14} className="text-rose-400 shrink-0" />
+              )}
+              <span className={testResult.success ? 'text-emerald-300' : 'text-rose-300'}>
+                {testResult.message}
+              </span>
+            </div>
+            {testResult.latencyMs !== undefined && (
+              <span className="text-[11px] font-mono text-[#888]">{testResult.latencyMs}ms</span>
+            )}
+          </div>
+        )}
+
+        {telemetry.lastError && (
+          <div className="p-3.5 bg-[#171717] flex items-center gap-2 text-xs text-rose-300 border-t border-[#262626]">
+            <AlertTriangleIcon size={14} className="text-rose-400 shrink-0" />
+            <span className="font-mono text-[11px]">{telemetry.lastError}</span>
+          </div>
+        )}
+      </SettingCard>
+
+      {/* Group 2: Cloud Database Provider */}
+      <SettingCard
+        title="Database Provider"
+        description="Select and configure your cloud database storage backend."
+      >
+        <SettingItem
+          name="Active Provider"
+          description="Choose the remote database service used for syncing."
+        >
+          <div className="flex items-center gap-1.5">
+            {(
+              [
+                { id: 'supabase', label: 'Supabase (Free Tier)' },
+                { id: 'turso', label: 'Turso libSQL' },
+                { id: 'cloudflare_d1', label: 'Cloudflare D1' },
+                { id: 'custom_rest', label: 'Custom REST' },
+              ] as const
+            ).map((prov) => {
+              const isSelected = config.activeProvider === prov.id;
+              return (
+                <button
+                  key={prov.id}
+                  type="button"
+                  onClick={() => updateConfig({ activeProvider: prov.id as SyncProviderType })}
+                  className={`px-2.5 py-1 text-xs rounded-[5px] border cursor-pointer select-none ${
+                    isSelected
+                      ? 'bg-[var(--flint-accent,#ea580c)] border-transparent text-white font-medium'
+                      : 'bg-[#181818] border-[#333] text-[#888] hover:text-white hover:border-[#444]'
+                  }`}
+                >
+                  {prov.label}
+                </button>
+              );
+            })}
+          </div>
+        </SettingItem>
+
+        {/* Provider Specific Configuration View */}
+        <div className="p-4 bg-[#1a1a1a]">
+          {config.activeProvider === 'supabase' && (
+            <SupabaseWizard
+              projectUrl={config.supabase.projectUrl}
+              anonKey={config.supabase.anonKey}
+              onUpdateCredentials={(projectUrl, anonKey) =>
+                updateConfig({ supabase: { ...config.supabase, projectUrl, anonKey } })
+              }
+              onTestConnection={handleTestConnection}
+              isTesting={isTesting}
+            />
+          )}
+
+          {config.activeProvider === 'turso' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-semibold text-white">Turso libSQL Configuration</h4>
+                  <p className="text-[11px] text-[#777] mt-0.5">
+                    Serverless SQLite at the edge with atomic batch pipelines.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    handleCopySchema(
+                      'turso',
+                      new TursoProvider(config.turso, 'wizard').getSchemaScript()
+                    )
+                  }
+                  icon={copiedSchema === 'turso' ? <CheckIcon size={12} /> : <CopyIcon size={12} />}
+                >
+                  {copiedSchema === 'turso' ? 'Copied' : 'Copy SQL Schema'}
+                </Button>
+              </div>
+
+              <div className="space-y-3 bg-[#171717] p-3.5 rounded-lg border border-[#262626]">
+                <div>
+                  <label className="block text-[11px] font-normal text-[#888] mb-1">
+                    Database URL
+                  </label>
+                  <TextInput
+                    isMono
+                    value={config.turso.databaseUrl}
+                    onChange={(e) =>
+                      updateConfig({ turso: { ...config.turso, databaseUrl: e.target.value.trim() } })
+                    }
+                    placeholder="libsql://your-db-org.turso.io"
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-normal text-[#888] mb-1">
+                    Auth Token (JWT)
+                  </label>
+                  <TextInput
+                    isMono
+                    type="password"
+                    value={config.turso.authToken}
+                    onChange={(e) =>
+                      updateConfig({ turso: { ...config.turso, authToken: e.target.value.trim() } })
+                    }
+                    placeholder="eyJhbGciOiJFZERTQ..."
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {config.activeProvider === 'cloudflare_d1' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-semibold text-white">Cloudflare D1 Configuration</h4>
+                  <p className="text-[11px] text-[#777] mt-0.5">
+                    Serverless SQLite database integrated with Cloudflare Workers API.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    handleCopySchema(
+                      'd1',
+                      new CloudflareD1Provider(config.cloudflareD1, 'wizard').getSchemaScript()
+                    )
+                  }
+                  icon={copiedSchema === 'd1' ? <CheckIcon size={12} /> : <CopyIcon size={12} />}
+                >
+                  {copiedSchema === 'd1' ? 'Copied' : 'Copy D1 Schema'}
+                </Button>
+              </div>
+
+              <div className="space-y-3 bg-[#171717] p-3.5 rounded-lg border border-[#262626]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-normal text-[#888] mb-1">
+                      Account ID
+                    </label>
+                    <TextInput
+                      isMono
+                      value={config.cloudflareD1.accountId}
+                      onChange={(e) =>
+                        updateConfig({
+                          cloudflareD1: { ...config.cloudflareD1, accountId: e.target.value.trim() },
+                        })
+                      }
+                      placeholder="Account ID"
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-normal text-[#888] mb-1">
+                      Database ID
+                    </label>
+                    <TextInput
+                      isMono
+                      value={config.cloudflareD1.databaseId}
+                      onChange={(e) =>
+                        updateConfig({
+                          cloudflareD1: { ...config.cloudflareD1, databaseId: e.target.value.trim() },
+                        })
+                      }
+                      placeholder="Database UUID"
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-normal text-[#888] mb-1">
+                    Cloudflare API Token
+                  </label>
+                  <TextInput
+                    isMono
+                    type="password"
+                    value={config.cloudflareD1.apiToken}
+                    onChange={(e) =>
+                      updateConfig({
+                        cloudflareD1: { ...config.cloudflareD1, apiToken: e.target.value.trim() },
+                      })
+                    }
+                    placeholder="API Token with D1 edit permissions"
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {config.activeProvider === 'custom_rest' && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-xs font-semibold text-white">Self-Hosted REST Server Configuration</h4>
+                <p className="text-[11px] text-[#777] mt-0.5">
+                  Synchronize with your own private server using standard REST endpoints.
+                </p>
+              </div>
+
+              <div className="space-y-3 bg-[#171717] p-3.5 rounded-lg border border-[#262626]">
+                <div>
+                  <label className="block text-[11px] font-normal text-[#888] mb-1">
+                    Server Endpoint URL
+                  </label>
+                  <TextInput
+                    isMono
+                    value={config.customRest.endpointUrl}
+                    onChange={(e) =>
+                      updateConfig({
+                        customRest: { ...config.customRest, endpointUrl: e.target.value.trim() },
+                      })
+                    }
+                    placeholder="https://sync.my-server.com/api"
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-normal text-[#888] mb-1">
+                    Bearer Token (Optional)
+                  </label>
+                  <TextInput
+                    isMono
+                    type="password"
+                    value={config.customRest.bearerToken}
+                    onChange={(e) =>
+                      updateConfig({
+                        customRest: { ...config.customRest, bearerToken: e.target.value.trim() },
+                      })
+                    }
+                    placeholder="Bearer authentication token"
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
           )}
         </div>
-      )}
+      </SettingCard>
 
-      {/* Provider Selector */}
-      <div className="space-y-3">
-        <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary,#a1a1aa)]">
-          Select Cloud Database Provider
-        </label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {(
-            [
-              { id: 'supabase', label: 'Supabase', desc: 'Free Tier (Recommended)', badge: 'Free' },
-              { id: 'turso', label: 'Turso libSQL', desc: 'Serverless SQLite', badge: 'Edge' },
-              { id: 'cloudflare_d1', label: 'Cloudflare D1', desc: 'Serverless Workers', badge: 'D1' },
-              { id: 'custom_rest', label: 'Custom REST', desc: 'Self-Hosted Server', badge: 'Self' },
-            ] as const
-          ).map((prov) => {
-            const isSelected = config.activeProvider === prov.id;
-            return (
-              <button
-                key={prov.id}
-                type="button"
-                onClick={() => updateConfig({ activeProvider: prov.id as SyncProviderType })}
-                className={`p-3 rounded-lg border text-left flex flex-col justify-between ${
-                  isSelected
-                    ? 'bg-[var(--color-primary,#6366f1)]/10 border-[var(--color-primary,#6366f1)] text-[var(--text-primary,#ffffff)] shadow-sm'
-                    : 'bg-[var(--bg-secondary,#18181b)] border-[var(--border-default,#3f3f46)] text-[var(--text-secondary,#a1a1aa)] hover:border-neutral-500'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full mb-1">
-                  <span className="text-xs font-bold text-[var(--text-primary,#ffffff)]">{prov.label}</span>
-                  <span className="text-[10px] px-1 py-0.2 rounded bg-neutral-800 text-neutral-400 font-mono">
-                    {prov.badge}
-                  </span>
-                </div>
-                <span className="text-[11px] text-[var(--text-secondary,#a1a1aa)]">{prov.desc}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Provider-Specific Configuration Section */}
-      <div className="space-y-4">
-        {config.activeProvider === 'supabase' && (
-          <SupabaseWizard
-            projectUrl={config.supabase.projectUrl}
-            anonKey={config.supabase.anonKey}
-            onUpdateCredentials={(projectUrl, anonKey) =>
-              updateConfig({ supabase: { ...config.supabase, projectUrl, anonKey } })
-            }
-            onTestConnection={handleTestConnection}
-            isTesting={isTesting}
-          />
-        )}
-
-        {config.activeProvider === 'turso' && (
-          <div className="bg-[var(--bg-secondary,#18181b)] border border-[var(--border-default,#3f3f46)] rounded-lg p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-semibold text-[var(--text-primary,#ffffff)] uppercase tracking-wider">
-                Turso libSQL Configuration
-              </h4>
-              <button
-                type="button"
-                onClick={() =>
-                  handleCopySchema('turso', new TursoProvider(config.turso, 'wizard').getSchemaScript())
-                }
-                className="text-xs px-2 py-1 rounded bg-[var(--bg-tertiary,#27272a)] text-cyan-400 border border-cyan-800/50 hover:bg-cyan-950/50"
-              >
-                {copiedSchema === 'turso' ? '✓ Copied SQL!' : '📋 Copy Turso SQL Schema'}
-              </button>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-[var(--text-secondary,#a1a1aa)] mb-1">
-                Database URL (e.g., libsql://my-db.turso.io)
-              </label>
-              <input
-                type="text"
-                value={config.turso.databaseUrl}
-                onChange={(e) =>
-                  updateConfig({ turso: { ...config.turso, databaseUrl: e.target.value } })
-                }
-                placeholder="libsql://your-db-org.turso.io"
-                className="w-full bg-[var(--bg-primary,#121214)] border border-[var(--border-default,#3f3f46)] rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-[var(--text-secondary,#a1a1aa)] mb-1">
-                Auth Token (JWT)
-              </label>
-              <input
-                type="password"
-                value={config.turso.authToken}
-                onChange={(e) =>
-                  updateConfig({ turso: { ...config.turso, authToken: e.target.value } })
-                }
-                placeholder="eyJhbGciOiJFZERTQ..."
-                className="w-full bg-[var(--bg-primary,#121214)] border border-[var(--border-default,#3f3f46)] rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500"
-              />
-            </div>
-          </div>
-        )}
-
-        {config.activeProvider === 'cloudflare_d1' && (
-          <div className="bg-[var(--bg-secondary,#18181b)] border border-[var(--border-default,#3f3f46)] rounded-lg p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-semibold text-[var(--text-primary,#ffffff)] uppercase tracking-wider">
-                Cloudflare D1 Configuration
-              </h4>
-              <button
-                type="button"
-                onClick={() =>
-                  handleCopySchema('d1', new CloudflareD1Provider(config.cloudflareD1, 'wizard').getSchemaScript())
-                }
-                className="text-xs px-2 py-1 rounded bg-[var(--bg-tertiary,#27272a)] text-orange-400 border border-orange-800/50 hover:bg-orange-950/50"
-              >
-                {copiedSchema === 'd1' ? '✓ Copied SQL!' : '📋 Copy D1 SQL Schema'}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-medium text-[var(--text-secondary,#a1a1aa)] mb-1">
-                  Account ID
-                </label>
-                <input
-                  type="text"
-                  value={config.cloudflareD1.accountId}
-                  onChange={(e) =>
-                    updateConfig({ cloudflareD1: { ...config.cloudflareD1, accountId: e.target.value } })
-                  }
-                  className="w-full bg-[var(--bg-primary,#121214)] border border-[var(--border-default,#3f3f46)] rounded px-2.5 py-1.5 text-xs text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-medium text-[var(--text-secondary,#a1a1aa)] mb-1">
-                  Database ID
-                </label>
-                <input
-                  type="text"
-                  value={config.cloudflareD1.databaseId}
-                  onChange={(e) =>
-                    updateConfig({ cloudflareD1: { ...config.cloudflareD1, databaseId: e.target.value } })
-                  }
-                  className="w-full bg-[var(--bg-primary,#121214)] border border-[var(--border-default,#3f3f46)] rounded px-2.5 py-1.5 text-xs text-white"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-[var(--text-secondary,#a1a1aa)] mb-1">
-                Cloudflare API Token
-              </label>
-              <input
-                type="password"
-                value={config.cloudflareD1.apiToken}
-                onChange={(e) =>
-                  updateConfig({ cloudflareD1: { ...config.cloudflareD1, apiToken: e.target.value } })
-                }
-                className="w-full bg-[var(--bg-primary,#121214)] border border-[var(--border-default,#3f3f46)] rounded px-2.5 py-1.5 text-xs text-white"
-              />
-            </div>
-          </div>
-        )}
-
-        {config.activeProvider === 'custom_rest' && (
-          <div className="bg-[var(--bg-secondary,#18181b)] border border-[var(--border-default,#3f3f46)] rounded-lg p-4 space-y-3">
-            <h4 className="text-xs font-semibold text-[var(--text-primary,#ffffff)] uppercase tracking-wider">
-              Self-Hosted REST Server Configuration
-            </h4>
-
-            <div>
-              <label className="block text-[11px] font-medium text-[var(--text-secondary,#a1a1aa)] mb-1">
-                Server Endpoint URL
-              </label>
-              <input
-                type="text"
-                value={config.customRest.endpointUrl}
-                onChange={(e) =>
-                  updateConfig({ customRest: { ...config.customRest, endpointUrl: e.target.value } })
-                }
-                placeholder="https://sync.my-server.com/api"
-                className="w-full bg-[var(--bg-primary,#121214)] border border-[var(--border-default,#3f3f46)] rounded px-2.5 py-1.5 text-xs text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-[var(--text-secondary,#a1a1aa)] mb-1">
-                Bearer Token (Optional)
-              </label>
-              <input
-                type="password"
-                value={config.customRest.bearerToken}
-                onChange={(e) =>
-                  updateConfig({ customRest: { ...config.customRest, bearerToken: e.target.value } })
-                }
-                className="w-full bg-[var(--bg-primary,#121214)] border border-[var(--border-default,#3f3f46)] rounded px-2.5 py-1.5 text-xs text-white"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Sync Preferences Section */}
-      <div className="bg-[var(--bg-secondary,#18181b)] border border-[var(--border-default,#3f3f46)] rounded-lg p-4 space-y-4">
-        <h4 className="text-xs font-semibold text-[var(--text-primary,#ffffff)] uppercase tracking-wider">
-          Sync Behavior & Automation
-        </h4>
-
-        {/* Auto Sync Toggle */}
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-xs font-medium text-[var(--text-primary,#ffffff)] block">
-              Auto-Sync on Save
-            </span>
-            <span className="text-[11px] text-[var(--text-secondary,#a1a1aa)]">
-              Automatically uploads changes 2.5 seconds after editing notes without blocking typing.
-            </span>
-          </div>
-          <input
-            type="checkbox"
+      {/* Group 3: Sync Automation & Behavior */}
+      <SettingCard
+        title="Sync Automation & Behavior"
+        description="Configure automatic synchronization, background intervals, and conflict resolution."
+      >
+        <SettingItem
+          name="Auto-Sync on Save"
+          description="Automatically uploads changes 2.5 seconds after editing notes without blocking typing."
+        >
+          <Toggle
             checked={config.autoSyncOnSave}
-            onChange={(e) => updateConfig({ autoSyncOnSave: e.target.checked })}
-            className="w-4 h-4 rounded text-indigo-600 bg-neutral-800 border-neutral-600"
+            onChange={(val) => updateConfig({ autoSyncOnSave: val })}
           />
-        </div>
+        </SettingItem>
 
-        {/* Interval Dropdown */}
-        <div className="flex items-center justify-between border-t border-[var(--border-default,#3f3f46)]/50 pt-3">
-          <div>
-            <span className="text-xs font-medium text-[var(--text-primary,#ffffff)] block">
-              Periodic Sync Interval
-            </span>
-            <span className="text-[11px] text-[var(--text-secondary,#a1a1aa)]">
-              Periodically checks the remote cloud database for notes edited on other devices.
-            </span>
-          </div>
-          <select
+        <SettingItem
+          name="Periodic Sync Interval"
+          description="Periodically checks the remote cloud database for notes edited on other devices."
+        >
+          <Select
             value={config.periodicIntervalSeconds}
-            onChange={(e) => updateConfig({ periodicIntervalSeconds: parseInt(e.target.value, 10) })}
-            className="bg-[var(--bg-primary,#121214)] border border-[var(--border-default,#3f3f46)] rounded px-2 py-1 text-xs text-white"
-          >
-            <option value={0}>Manual Only</option>
-            <option value={60}>Every 1 Minute</option>
-            <option value={300}>Every 5 Minutes (Default)</option>
-            <option value={900}>Every 15 Minutes</option>
-            <option value={1800}>Every 30 Minutes</option>
-          </select>
-        </div>
+            options={[
+              { value: 0, label: 'Manual Only' },
+              { value: 60, label: 'Every 1 Minute' },
+              { value: 300, label: 'Every 5 Minutes (Default)' },
+              { value: 900, label: 'Every 15 Minutes' },
+              { value: 1800, label: 'Every 30 Minutes' },
+            ]}
+            onChange={(val) => updateConfig({ periodicIntervalSeconds: Number(val) })}
+          />
+        </SettingItem>
 
-        {/* Conflict Strategy Dropdown */}
-        <div className="flex items-center justify-between border-t border-[var(--border-default,#3f3f46)]/50 pt-3">
-          <div>
-            <span className="text-xs font-medium text-[var(--text-primary,#ffffff)] block">
-              Conflict Resolution Strategy
-            </span>
-            <span className="text-[11px] text-[var(--text-secondary,#a1a1aa)]">
-              How to reconcile simultaneous edits on the same note across different devices.
-            </span>
-          </div>
-          <select
+        <SettingItem
+          name="Conflict Resolution Strategy"
+          description="How to reconcile simultaneous edits on the same note across different devices."
+        >
+          <Select
             value={config.conflictStrategy}
-            onChange={(e) => updateConfig({ conflictStrategy: e.target.value as ConflictStrategy })}
-            className="bg-[var(--bg-primary,#121214)] border border-[var(--border-default,#3f3f46)] rounded px-2 py-1 text-xs text-white"
-          >
-            <option value="last_write_wins">Newer Timestamp (Last Write Wins)</option>
-            <option value="keep_both">Keep Both (Create Duplicate Note)</option>
-            <option value="local_wins">Local Always Wins</option>
-            <option value="remote_wins">Remote Always Wins</option>
-          </select>
-        </div>
+            options={[
+              { value: 'last_write_wins', label: 'Newer Timestamp (Last Write Wins)' },
+              { value: 'keep_both', label: 'Keep Both (Create Duplicate Note)' },
+              { value: 'local_wins', label: 'Local Always Wins' },
+              { value: 'remote_wins', label: 'Remote Always Wins' },
+            ]}
+            onChange={(val) => updateConfig({ conflictStrategy: val as ConflictStrategy })}
+          />
+        </SettingItem>
 
-        {/* Device Identifier */}
-        <div className="flex items-center justify-between border-t border-[var(--border-default,#3f3f46)]/50 pt-3">
-          <div>
-            <span className="text-xs font-medium text-[var(--text-primary,#ffffff)] block">
-              Device Identifier
-            </span>
-            <span className="text-[11px] text-[var(--text-secondary,#a1a1aa)]">
-              Identifies this device to prevent echo updates during sync.
-            </span>
-          </div>
-          <span className="font-mono text-xs text-neutral-400 bg-neutral-800 px-2 py-0.5 rounded border border-neutral-700">
+        <SettingItem
+          name="Device Identifier"
+          description="Unique identifier for this machine to prevent echo sync loops."
+        >
+          <span className="font-mono text-xs text-[#888] bg-[#181818] px-2.5 py-1 rounded-[5px] border border-[#333] select-all">
             {config.deviceId}
           </span>
-        </div>
-      </div>
+        </SettingItem>
+      </SettingCard>
     </div>
   );
 };
