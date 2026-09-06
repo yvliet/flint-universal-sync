@@ -1,0 +1,21 @@
+{
+  "id": "flint-universal-sync",
+  "name": "Universal External Sync",
+  "version": "1.0.0",
+  "minAppVersion": "0.4.0",
+  "description": "Cross-device note synchronization supporting Supabase (free tier with guided setup), Turso, Cloudflare D1, and Custom REST databases.",
+  "author": "Yuliet Li",
+  "authorUrl": "https://github.com/yvliet",
+  "category": "Integration",
+  "tags": [
+    "sync",
+    "cloud",
+    "supabase",
+    "turso",
+    "backup",
+    "cross-device",
+    "database"
+  ],
+  "icon": "cloud",
+  "repoUrl": "https://github.com/yvliet/flint-universal-sync"
+}

@@ -1,0 +1,63 @@
+name: Publish Extension to Flint Registry
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Run Typecheck
+        run: npm run typecheck
+
+      - name: Build bundle
+        run: npm run build
+
+      - name: Publish to Flint Registry
+        env:
+          REGISTRY_API_URL: 'https://api.flintnotes.com/api/v1/plugins/publish'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            const manifest = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
+            const bundleCode = fs.readFileSync("dist/main.js", "utf8");
+            const readme = fs.existsSync("README.md") ? fs.readFileSync("README.md", "utf8") : "";
+            
+            const payload = {
+              manifest,
+              bundleCode,
+              readme,
+              author: {
+                githubUsername: context.repo.owner,
+                displayName: manifest.author || context.repo.owner,
+              }
+            };
+            
+            fetch(process.env.REGISTRY_API_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            }).then(async (res) => {
+              if (!res.ok) {
+                const text = await res.text();
+                console.error("Publish failed:", res.status, text);
+                process.exit(1);
+              }
+              console.log("Published successfully to Flint Community Registry!");
+            });
+          '

@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "flint": ["../../src/sdk/index.ts"],
+      "@flint/sdk": ["../../src/sdk/index.ts"],
+      "@/*": ["../../src/*"]
+    },
+    "outDir": "./dist"
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
