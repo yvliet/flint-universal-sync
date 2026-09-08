@@ -210,6 +210,7 @@ export class UniversalSyncExtension extends Extension {
       parameters: {
         type: 'object',
         properties: {},
+        required: [],
       },
       handler: async (): Promise<McpToolResult> => {
         const result = await this.engine.syncNow();
@@ -240,6 +241,7 @@ export class UniversalSyncExtension extends Extension {
       parameters: {
         type: 'object',
         properties: {},
+        required: [],
       },
       handler: async (): Promise<McpToolResult> => {
         const telemetry = this.engine.getTelemetry();
@@ -271,6 +273,7 @@ export class UniversalSyncExtension extends Extension {
       parameters: {
         type: 'object',
         properties: {},
+        required: [],
       },
       handler: async (): Promise<McpToolResult> => {
         const provider = createProvider(this.config);
