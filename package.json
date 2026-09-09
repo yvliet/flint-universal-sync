@@ -1,6 +1,6 @@
 {
   "name": "flint-universal-sync",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Universal cross-device note sync extension for Flint supporting Supabase, Turso, Cloudflare D1, and Custom REST databases.",
   "main": "dist/main.js",
   "types": "src/index.ts",
@@ -25,15 +25,15 @@
     "url": "git+https://github.com/yvliet/flint-universal-sync.git"
   },
   "devDependencies": {
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "esbuild": "^0.25.0",
     "typescript": "^5.8.2"
   },
   "peerDependencies": {
     "flint": "^0.4.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "zod": "^3.24.2"
   }
 }

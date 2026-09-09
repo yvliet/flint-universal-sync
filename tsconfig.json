@@ -14,10 +14,13 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
+    "typeRoots": ["../Flint/node_modules/@types"],
     "paths": {
-      "flint": ["../../src/sdk/index.ts"],
-      "@flint/sdk": ["../../src/sdk/index.ts"],
-      "@/*": ["../../src/*"]
+      "flint": ["../Flint/src/sdk/index.ts"],
+      "@flint/sdk": ["../Flint/src/sdk/index.ts"],
+      "@/*": ["../Flint/src/*"],
+      "react": ["./node_modules/@types/react"],
+      "react-dom": ["./node_modules/@types/react-dom"]
     },
     "outDir": "./dist"
   },

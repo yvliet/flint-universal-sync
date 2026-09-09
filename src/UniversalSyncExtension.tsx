@@ -29,7 +29,6 @@ import {
 import { SyncEngine, SyncEngineState } from './engine/SyncEngine';
 import { UniversalSyncSettingsTab } from './ui/UniversalSyncSettingsTab';
 import { createProvider } from './providers';
-import { CloudSyncIcon } from './ui/Icons';
 
 
 export class UniversalSyncExtension extends Extension {
@@ -109,19 +108,7 @@ export class UniversalSyncExtension extends Extension {
       },
     });
 
-    // 4. Register Action Rail Icon (Left Toolbar)
-    this.addActionRailIcon(
-      'action-sync',
-      React.createElement(CloudSyncIcon, { size: 16 }),
-      'Universal Sync: Sync Notes',
-      async (app) => {
-        const res = await this.engine.syncNow();
-        app.workspace.showToast(res.message, res.success ? 'success' : 'warning');
-      },
-      25
-    );
-
-    // 5. Register Status Bar Indicator (Bottom Bar)
+    // 4. Register Status Bar Indicator (Bottom Bar)
     this.addStatusBarItem({
       id: 'sync-status-indicator',
       alignment: 'right',
@@ -171,7 +158,7 @@ export class UniversalSyncExtension extends Extension {
     });
 
 
-    // 6. Register Settings Tab with Interactive Wizard
+    // 5. Register Settings Tab with Interactive Wizard
     this.registerSettingTab({
       id: 'universal-sync',
       name: 'Universal Sync',
@@ -194,7 +181,7 @@ export class UniversalSyncExtension extends Extension {
       },
     });
 
-    // 7. Subscribe to EventBus Events for Real-Time Sync
+    // 6. Subscribe to EventBus Events for Real-Time Sync
     this.onEvent('document:saved', () => {
       this.engine.onDocumentSaved();
     });
@@ -203,7 +190,7 @@ export class UniversalSyncExtension extends Extension {
       this.engine.recordDeletion(id);
     });
 
-    // 8. Register Model Context Protocol (MCP) AI Tools
+    // 7. Register Model Context Protocol (MCP) AI Tools
     this.registerTool({
       name: 'sync_now',
       description: 'Triggers an immediate cross-device note synchronization cycle with the configured cloud database.',
@@ -295,7 +282,7 @@ export class UniversalSyncExtension extends Extension {
       },
     });
 
-    // 9. Initial opportunistic sync check if credentials exist
+    // 8. Initial opportunistic sync check if credentials exist
     if (this.hasConfiguredCredentials()) {
       setTimeout(() => {
         this.engine.syncNow().catch(() => {});
